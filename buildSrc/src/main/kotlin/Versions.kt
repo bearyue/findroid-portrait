@@ -9,7 +9,9 @@ object Versions {
     const val minSdk = 28
     const val targetSdk = 35
 
-    val java = JavaVersion.VERSION_21
+    // Keep the local build compatible with the JDK 17 toolchain available on
+    // this workstation. The portrait-playback change does not require Java 21.
+    val java = JavaVersion.VERSION_17
 
     const val ktlint = "0.50.0"
 }

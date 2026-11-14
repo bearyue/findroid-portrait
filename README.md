@@ -10,6 +10,14 @@
 
 Findroid is third-party Android application for Jellyfin that provides a native user interface to browse and play movies and series.
 
+## Portrait playback fork
+
+This checkout changes the phone player from landscape-only to sensor-based full
+orientation, so portrait videos can remain portrait while the device rotates.
+In portrait playback, vertical swipes use three zones: brightness on the left,
+previous/next episode in the center, and volume on the right.
+The local build target is Java 17 to match the toolchain used on this Mac.
+
 I am developing this application in my spare time.
 
 **This project is in its early stages so expect bugs.**

@@ -58,6 +58,7 @@ class PlayerGestureHelper(
     private var swipeGestureVolumeOpen = false
     private var swipeGestureBrightnessOpen = false
     private var swipeGestureProgressOpen = false
+    private var swipeGestureEpisodeTriggered = false
 
     private var lastScaleEvent: Long = 0
 
@@ -311,19 +312,41 @@ class PlayerGestureHelper(
                 // Disables volume gestures when player is locked
                 if (isControlsLocked) return false
 
-                if (abs(distanceY / distanceX) < 2) return false
+                if (abs(distanceY) < abs(distanceX) * 2) return false
 
                 if (swipeGestureValueTrackerProgress > -1 || swipeGestureProgressOpen) {
                     return false
                 }
 
-                val viewCenterX = playerView.measuredWidth / 2
+                // Use three vertical gesture zones: brightness on the left,
+                // episode navigation in the middle, and volume on the right.
+                // The episode action is fired once after the swipe passes a
+                // small threshold so a long drag cannot skip multiple items.
+                val viewWidth = playerView.measuredWidth
+                val firstX = firstEvent.x
+                val isLeftZone = firstX < viewWidth / 3f
+                val isRightZone = firstX >= viewWidth * 2f / 3f
+                if (!isLeftZone && !isRightZone) {
+                    val verticalTravel = firstEvent.y - currentEvent.y
+                    val episodeSwipeThreshold = playerView.resources.displayMetrics.density * 56f
+                    if (!swipeGestureEpisodeTriggered && abs(verticalTravel) >= episodeSwipeThreshold) {
+                        val player = playerView.player
+                        if (verticalTravel > 0 && player?.hasNextMediaItem() == true) {
+                            player.seekToNextMediaItem()
+                            swipeGestureEpisodeTriggered = true
+                        } else if (verticalTravel < 0 && player?.hasPreviousMediaItem() == true) {
+                            player.seekToPreviousMediaItem()
+                            swipeGestureEpisodeTriggered = true
+                        }
+                    }
+                    return true
+                }
 
                 // Distance to swipe to go from min to max
                 val distanceFull = playerView.measuredHeight * Constants.FULL_SWIPE_RANGE_SCREEN_RATIO
                 val ratioChange = distanceY / distanceFull
 
-                if (firstEvent.x.toInt() > viewCenterX) {
+                if (isRightZone) {
                     // Swiping on the right, change volume
 
                     val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
@@ -453,6 +476,7 @@ class PlayerGestureHelper(
                 }
             }
             currentNumberOfPointers = 0
+            swipeGestureEpisodeTriggered = false
         }
         if (lastPlaybackSpeed > 0 && (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL)) {
             playerView.player?.setPlaybackSpeed(lastPlaybackSpeed)

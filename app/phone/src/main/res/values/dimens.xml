@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The five center playback controls must fit on narrow portrait screens. -->
+    <dimen name="player_control_button_gap">8dp</dimen>
+</resources>
